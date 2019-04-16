@@ -1,9 +1,10 @@
 
 class PongGame
 {
-    constructor()
+    constructor(name)
     {
-        this.socket = io();
+        this.socket = io("localhost:5000");
+        //this.socket = io("localhost:8080");
         this.canvas = document.getElementById("game");
         this.ctx = this.canvas.getContext("2d"); 
         document.addEventListener('keydown', this.onKeyPress.bind(this));
@@ -11,7 +12,11 @@ class PongGame
         this.GameStarted = true;
         this.CANVAS_WIDTH = 800;
         this.CANVAS_HEIGHT = 600;
+        this.name = name;
         this.players = [];
+
+        this.socket.emit('PLAYER_NAME',name);
+
 
         this.socket.on('PLAYERS_UPDATE',(players) =>
         {
@@ -60,7 +65,8 @@ class PongGame
 
     loop()
     {
-        this.draw();
+        if(this.players.length>0)
+            this.draw();
     }
 
     draw()  
@@ -185,8 +191,14 @@ class Player
 
 
 // Yeni oyun oluştur:
-const game = new PongGame();
+
 
   
 // Sayfa yüklendiğinde oyunu oynanabilir hale getir:
-window.onload = () => game.init();
+
+
+function StartGame(name)
+{
+    const game = new PongGame(name);
+     game.init();
+}
