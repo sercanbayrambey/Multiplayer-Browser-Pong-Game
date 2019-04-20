@@ -3,17 +3,18 @@ class PongGame
 {
     constructor(name)
     {
-        this.socket = io("localhost:5000");
-        //this.socket = io("localhost:8080");
+        //this.socket = io("https://pong-sercan.herokuapp.com/");
+        this.socket = io("localhost:8080");
         this.canvas = document.getElementById("game");
         this.ctx = this.canvas.getContext("2d"); 
         document.addEventListener('keydown', this.onKeyPress.bind(this));
         document.addEventListener('keyup', this.onKeyUp.bind(this));
-        this.GameStarted = true;
-        this.CANVAS_WIDTH = 800;
+        this.CANVAS_WIDTH = 1000;
         this.CANVAS_HEIGHT = 600;
         this.name = name;
+        this.GameStarted;
         this.players = [];
+        this.statusText = "";
 
         this.socket.emit('PLAYER_NAME',name);
 
@@ -35,7 +36,14 @@ class PongGame
             this.players = NewPlayers;
             
         });
+
+        this.socket.on('GAME_STATUS_UPDATE',(statusText,status) =>
+        {
+            this.GameStarted = status;
+            this.statusText = statusText;
+        });
         
+
 
 
         this.socket.on('BALL_UPDATE',(balls) =>
@@ -60,8 +68,11 @@ class PongGame
     init(){   
         setInterval( () =>  {
             this.loop();
-        },1000/60);
+        },1000/120);
     }
+
+
+    
 
     loop()
     {
@@ -73,19 +84,15 @@ class PongGame
     {
         this.ctx.fillStyle = 'black';
         this.ctx.fillRect(0,0,this.CANVAS_WIDTH,this.CANVAS_HEIGHT);
-        if(!this.GameStarted)//GAME OVER TEXT
-            {
+
+        if(this.statusText != "")
+        {
                 this.ctx.fillStyle = "red";
                 this.ctx.font = "40px Verdana";
                 this.ctx.textAlign = "center";
-                this.ctx.fillText("Game OVER :(", this.CANVAS_WIDTH/2,this.CANVAS_HEIGHT/2);
-            }
-
-            //SCORE
-        this.ctx.fillStyle = "red";
-        this.ctx.font = "40px Verdana";
-        this.ctx.textAlign = "left";
-        this.ctx.fillText( this.time = Math.floor((Date.now() - this.startTime) / 1000).toString(),0,this.CANVAS_HEIGHT-5);
+                this.ctx.fillText(this.statusText, this.CANVAS_WIDTH/2,this.CANVAS_HEIGHT/2);
+        }
+     
         
         for(var i=0;i<this.balls.length;i++)
         {
@@ -104,11 +111,11 @@ class PongGame
     {
         
         if (e.keyCode === 87) {//UP
-            this.socket.emit('PLAYER_DIRECTION_UPDATE', {  velocity: -10 });
+            this.socket.emit('PLAYER_DIRECTION_UPDATE', {  velocity: -5 });
         }
         else if (e.keyCode === 83 ) {//DOWN
         
-            this.socket.emit('PLAYER_DIRECTION_UPDATE', {  velocity: 10 });
+            this.socket.emit('PLAYER_DIRECTION_UPDATE', {  velocity: 5 });
         }
 
     
@@ -150,7 +157,7 @@ class Ball{
 
     draw()
     {
-        this.ctx.fillStyle = "green";
+        this.ctx.fillStyle = "red";
         this.ctx.beginPath();
         this.ctx.arc(this.x, this.y, this.r, 0, 2 * Math.PI);
         this.ctx.closePath();

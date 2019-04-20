@@ -7,7 +7,7 @@
         </form>
 
 
-    <canvas id="game" width="800" height="600"></canvas>
+    <canvas id="game" width="1000" height="600"></canvas>
     <script src="/socket.io/socket.io.js"></script>
  
    
@@ -18,7 +18,6 @@
    function Start() {
        if(!started){
            var name  = document.getElementById("name").value;
-           name.toLowerCase();
            started = true;
            document.getElementById('button').style.display = 'none';
            document.getElementById('name').style.display = 'none';

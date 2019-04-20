@@ -36,33 +36,76 @@ class PongGame
         this.test = [];
         this.balls = [];
         this.players = [];
-        this.CANVAS_WIDTH = 800;
+        this.CANVAS_WIDTH = 1000;
         this.CANVAS_HEIGHT = 600;
         this.time;
         this.timer;
+        this.StatusText;
         this.GameStarted = false;
-        this.score = [];
         this.init();
-        this.GenerateBall();
-        this.score[0]= 0;
-        this.score[1] = 0;
        
-        
     }
 
 
-    init(){   
-      
-      if(!this.GameStarted)
-        {
-          this.balls = [];
-          this.GenerateBall();
-          this.timer = setInterval(this.update.bind(this),1000/60);
-        }
+    init() {   
 
-
+      if(this.players.length>1)
+      {
+        this.StatusText = "Oyuncu bağlandı, 3 saniye içinde oyun başlıyor!!";
+        setTimeout(this.StartGame.bind(this),3000);
 
       }
+      else
+      {
+        this.StatusText= "Oyuncu bekleniyor...";
+        this.GameStarted = false;
+        clearInterval(this.timer);
+        setTimeout(this.init.bind(this),1000);
+        
+      }
+
+      }
+
+      StartGame()
+      {
+        this.StatusText = "";
+        this.GenerateBall();
+        this.timer = setInterval(this.update.bind(this),1000/120);
+        this.GameStarted = true;
+      }
+
+      StartNewRound()
+      {
+
+        this.StatusText = "";
+        this.GenerateBall();
+        this.timer = setInterval(this.update.bind(this),1000/120);
+
+      }
+
+
+      RestartRound(whoLose)
+      {
+
+      if(whoLose == 0)
+      {
+        this.StatusText = game.players[1].name + " " + "skor aldı !!";
+        this.players[1].score++;
+      }
+      else
+        {
+        this.StatusText = game.players[0].name + " " + "skor aldı !!";
+        this.players[1].score++;
+        }
+
+      clearInterval(this.timer);
+      setTimeout(this.StartNewRound.bind(this),1500);
+
+      }
+
+
+   
+
 
     addNewPlayer(id)
     {
@@ -73,23 +116,24 @@ class PongGame
         this.players[0].y = 100;
         if(this.players.length>1)
         {
-            this.players[1].x = 750;
+            this.players[1].x = this.CANVAS_WIDTH-50;
             this.players[1].y = 100;
         }
 
     }
 
+   
 
 
     GenerateBall()
     {
         this.balls = [];
         var ball = new Ball();
-        ball.x = Math.random()*400+30;  
-        ball.y =  Math.random()*400+30;
-        ball.velocityX = 10;
-        ball.velocityY = 10;
         ball.r = 15;
+        ball.x = this.CANVAS_WIDTH/2+ball.r; 
+        ball.y = this.CANVAS_HEIGHT/2+ball.r;
+        ball.velocityX = -ball.ballSpeed;
+        ball.velocityY =  ball.ballSpeed;
         this.balls.push(ball);
  
     }
@@ -97,29 +141,15 @@ class PongGame
 
 
 
-    reset(whoLose)
-    {
-      console.log("Reset");
-      this.GameStarted = false;
-      clearInterval(this.timer);
-      setTimeout(this.init.bind(this),1500);
-
-    }
-
-
 
     update()    
     {
-      if(this.players.length>1)
-      {
         this.balls[0].update();
         for(var i=0;i<this.players.length;i++)
         {
           this.players[i].update();
         }
-
-      }
-    
+ 
   
     }
    
@@ -136,6 +166,7 @@ class Ball{
         this.velocityX;
         this.velocityY;
         this.r;
+        this.ballSpeed = 5;
      
     }
 
@@ -143,50 +174,50 @@ class Ball{
 
     update()
     {
+        //PLAYER COLLISION DETECTS
+            //Player 1 (Left Side)
+              if(this.x-this.r<=game.players[0].x+game.players[0].w && this.x+this.r>=game.players[0].x+game.players[0].w && this.y + this.r >= game.players[0].y && this.y-this.r<=game.players[0].y + game.players[0].h)
+              {
+                this.velocityX*=-1;
+                this.velocityY*=-1;
+                console.log("İl");
+              }
+            else if(this.y+this.r>=game.players[0].y && this.y-this.r<=game.players[0].y && this.x-this.r<=game.players[0].x && this.x+this.r<=game.players[0].x+game.players[0].w)
+              {
+                this.velocityY*=-1;
+                console.log("son");
+              }
+              if(this.y-this.r<=game.players[0].y+game.players[0].h && this.x-this.r<=game.players[0].x+game.players[0].w){
+                this.velocityY*=-1;
+              }
+            
+
+
+
+
+
+
+
     
         if(this.x+this.r>=game.CANVAS_WIDTH)
             this.velocityX*=-1;
         if(this.y+this.r>=game.CANVAS_HEIGHT || this.y-this.r<=0)
             this.velocityY*=-1;
 
-            //player[0] WHO HAS 0 INDEX  ALWAYS  WILL BE LEFT SIDE
+          
+        if(this.x-this.r<=0 )
+        {
+          game.RestartRound(0);
+        }
 
-
-            //COLLISIONS FOR LEFT SIDE players[0]  INDEX IS 0
-         if(this.x <= game.players[0].x + game.players[0].w + this.r && (this.y>=game.players[0].y && this.y<=game.players[0].y +game.players[0].h ))
-         {
-              this.velocityX*=-1;
-              
-         }
-        if(this.x-this.r<=game.players[0].x+game.players[0].w/2 && (this.y+this.r>=game.players[0].y || this.y-this.r<=game.players[0].y+game.players[0].h))
-         game.reset(0);
-
-         //COLLISIONS END FOR LEFT SIDE player
-
-         //COLLISIONS FOR RIGHT SIDE players[1]
-       
-         if(game.players.length>1)
-         {
-                if(game.players[1].x<=this.x+this.r  && this.y >= game.players[1].y && this.y <= game.players[1].y+game.players[1].h)
-                    this.velocityX*=-1;
-
-
-                   if(this.x+this.r>=game.players[1].x+game.players[1].w/2 && (this.y+this.r>=game.players[1].y || this.y-this.r<=game.players[1].y    +game.players[1].h ))
-                   game.reset(1);
-            }
-                
-    if(this.x-this.r<=0 )
-     {
-          game.reset(0);
-     }
-
-     if(this.x+this.r>=game.CANVAS_WIDTH)
-     {
-        game.reset(1);
-     }
+        else if(this.x+this.r>=game.CANVAS_WIDTH)
+        {
+        game.RestartRound(1);
+        }
         
         this.x+=this.velocityX;  
         this.y+=this.velocityY;   
+
 
    }
 
@@ -206,6 +237,7 @@ class Player
         this.w = 30;
         this.velocityY=0;
         this.name;
+        this.score;
 
     }
     
@@ -234,10 +266,7 @@ class Player
 }
 
 
-
-
 var game = new PongGame();
-var gameID=0;
 
 
 
@@ -247,26 +276,29 @@ setInterval( () =>
 {
     io.sockets.emit('PLAYERS_UPDATE',game.players);
     io.sockets.emit('BALL_UPDATE',game.balls);
+    io.sockets.emit('GAME_STATUS_UPDATE',game.StatusText,game.GameStarted);
 
-},1000/30);
+},1000/70);
+
+
 
 
 
 
 io.on('connection',function(socket)
-{
+  {
     console.log("Player connected!!");
-    if(game.players.lenght<1 || game.players.lenght == undefined)
-        game.addNewPlayer(socket.id);  
-        
-        
-
-  socket.on('disconnect',function()
+    if(game.players.length <= 1 || game.players.length == undefined)
+    {
+      game.addNewPlayer(socket.id);  
+    }
+    
+  
+        socket.on('disconnect',function()
         {
            console.log("Player disconnected!");
            game.players = game.players.filter( player => player.id != socket.id );
-           console.log(game.players);
-           
+           game.init();
         });
 
 
@@ -281,14 +313,15 @@ io.on('connection',function(socket)
         socket.on('PLAYER_NAME', function(name)
         {
           const player = game.players.filter( player => player.id == socket.id );
-          player[0].name = name;
-          console.log(name);
-        }
-        
-        
-        )
+          var cutName = name.substring(0,8);
+           player[0].name = cutName;     
 
-});  
+        });
+
+
+        
+      
+  });  
 
 server.listen(port);
 server.on('error', onError);
